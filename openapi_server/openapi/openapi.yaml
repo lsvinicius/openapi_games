@@ -1,0 +1,276 @@
+openapi: 3.0.0
+info:
+  description: API for consulting games
+  title: Games api
+  version: "1.0"
+servers:
+- description: Production server
+  url: https://mygames.com
+- description: Dev server
+  url: https://dev.mygames.com
+paths:
+  /games:
+    get:
+      operationId: get_games
+      parameters:
+      - description: Console name
+        explode: true
+        in: query
+        name: console
+        required: false
+        schema:
+          $ref: '#/components/schemas/Platform'
+        style: form
+      - explode: true
+        in: query
+        name: year
+        required: false
+        schema:
+          pattern: ^\d{4}(-\d{4})*$
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: year
+          enum:
+          - year
+          - name
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GamesList'
+          description: Return list of games
+      summary: Return all games according to filters
+      tags:
+      - Games
+      x-openapi-router-controller: openapi_server.controllers.games_controller
+  /games/new:
+    post:
+      operationId: post_new_game
+      requestBody:
+        $ref: '#/components/requestBodies/GameRequestData'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+            application/x-www-form-urlencoded:
+              schema:
+                description: 201 indicating resource was created
+                type: integer
+          description: New game added successfully
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+            application/x-www-form-urlencoded:
+              schema:
+                description: 409 error code
+                type: integer
+          description: Game already exists
+      summary: Add new game
+      tags:
+      - Games
+      x-openapi-router-controller: openapi_server.controllers.games_controller
+  /games/{searchTitle}:
+    delete:
+      operationId: delete_game
+      parameters:
+      - explode: false
+        in: path
+        name: searchTitle
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: Deleted game successfully
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: Game not found
+      summary: Delete game by title
+      tags:
+      - Games
+      x-openapi-router-controller: openapi_server.controllers.games_controller
+    get:
+      operationId: get_games_by_title
+      parameters:
+      - explode: false
+        in: path
+        name: searchTitle
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Console name
+        explode: true
+        in: query
+        name: console
+        required: false
+        schema:
+          $ref: '#/components/schemas/Platform'
+        style: form
+      - explode: true
+        in: query
+        name: year
+        required: false
+        schema:
+          pattern: ^\d{4}(-\d{4})*$
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: year
+          enum:
+          - year
+          - name
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GamesList'
+          description: Return list of games
+      summary: Return closest matching games by comparing their title with `searchTitle`
+      tags:
+      - Games
+      x-openapi-router-controller: openapi_server.controllers.games_controller
+components:
+  parameters:
+    ConsoleFilter:
+      description: Console name
+      explode: true
+      in: query
+      name: console
+      required: false
+      schema:
+        $ref: '#/components/schemas/Platform'
+      style: form
+    YearFilter:
+      explode: true
+      in: query
+      name: year
+      required: false
+      schema:
+        pattern: ^\d{4}(-\d{4})*$
+        type: string
+      style: form
+    GamesSortOptions:
+      explode: true
+      in: query
+      name: sort
+      required: false
+      schema:
+        default: year
+        enum:
+        - year
+        - name
+        type: string
+      style: form
+  requestBodies:
+    GameRequestData:
+      content:
+        application/json:
+          example:
+            title: Witcher 3
+            releaseYear: 2015
+            platforms:
+            - playstation-4
+            - nintendo-wii
+            - xbox-one
+            - pc
+          schema:
+            $ref: '#/components/schemas/Game'
+        application/x-www-form-urlencoded:
+          schema:
+            $ref: '#/components/schemas/Game'
+      description: Game parameters
+      required: true
+  responses:
+    GamesListSuccessResponse:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GamesList'
+      description: Return list of games
+  schemas:
+    Platform:
+      enum:
+      - playstation-5
+      - playstation-4
+      - playstation-3
+      - playstation-2
+      - playstation-1
+      - nintendo-switch
+      - nintendo-wii
+      - game-cube
+      - nintendo-64
+      - super-nintendo
+      - xbox-series-x
+      - xbox-one
+      - xbox-360
+      - pc
+      type: string
+    Game:
+      example:
+        title: title
+        releaseYear: 0
+        platforms:
+        - null
+        - null
+      properties:
+        title:
+          description: Game title
+          type: string
+        releaseYear:
+          description: Game release year
+          type: integer
+        platforms:
+          description: Platforms game was released to
+          items:
+            $ref: '#/components/schemas/Platform'
+          type: array
+      required:
+      - platforms
+      - releaseYear
+      - title
+      type: object
+    GamesList:
+      items:
+        $ref: '#/components/schemas/Game'
+      type: array
+    Message:
+      example:
+        code: 0
+        success: true
+        message: message
+      properties:
+        message:
+          type: string
+        code:
+          type: integer
+        success:
+          type: boolean
+      type: object

@@ -1,0 +1,185 @@
+openapi: 3.0.0
+info:
+  version: '1.0'
+  title: 'Games api'
+  description: 'API for consulting games'
+servers: 
+  - url: https://mygames.com
+    description: Production server
+  - url: https://dev.mygames.com
+    description: Dev server
+paths:
+  /games:
+    get:
+      operationId: get_games
+      tags:
+        - Games
+      summary: Return all games according to filters
+      parameters:
+        - $ref: '#/components/parameters/ConsoleFilter'
+        - $ref: '#/components/parameters/YearFilter'
+        - $ref: '#/components/parameters/GamesSortOptions'
+      responses:
+        '200':
+          $ref: '#/components/responses/GamesListSuccessResponse'
+  /games/{searchTitle}:
+    parameters:
+      - name: searchTitle
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: get_games_by_title
+      tags:
+        - Games
+      summary: Return closest matching games by comparing their title with `searchTitle`
+      parameters:
+        - $ref: '#/components/parameters/ConsoleFilter'
+        - $ref: '#/components/parameters/YearFilter'
+        - $ref: '#/components/parameters/GamesSortOptions'
+      responses:
+        '200':
+          $ref: '#/components/responses/GamesListSuccessResponse'
+    delete:
+      operationId: delete_game
+      tags:
+        - Games
+      summary: Delete game by title
+      responses:
+        '201':
+          description: Deleted game successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '404':
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+  /games/new:
+    post:
+      operationId: post_new_game
+      tags:
+        - Games
+      summary: Add new game
+      requestBody:
+        $ref: '#/components/requestBodies/GameRequestData'
+      responses:
+        '201':
+          description: New game added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+            application/x-www-form-urlencoded:
+              schema:
+                description: 201 indicating resource was created
+                type: integer
+        '409':
+          description: Game already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+            application/x-www-form-urlencoded:
+              schema:
+                description: 409 error code
+                type: integer
+components:
+  requestBodies:
+    GameRequestData:
+      required: true
+      description: Game parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Game'
+          example: 
+            title: 'Witcher 3'
+            releaseYear: 2015
+            platforms: ["playstation-4", "nintendo-wii", "xbox-one", "pc"]
+        application/x-www-form-urlencoded:
+          schema:
+            $ref: '#/components/schemas/Game'
+  responses:
+    GamesListSuccessResponse:
+      description: Return list of games
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GamesList'
+  parameters:
+    ConsoleFilter:
+      name: console
+      in: query
+      required: false
+      description: Console name
+      schema:
+        $ref: '#/components/schemas/Platform'
+    YearFilter:
+      name: year
+      in: query
+      required: false
+      schema:
+        type: string
+        pattern: '^\d{4}(-\d{4})*$'
+    GamesSortOptions:
+      name: sort
+      in: query
+      schema:
+        enum:
+        - year
+        - name
+        default: year
+  schemas:
+    Platform:
+      type: string
+      enum:
+      - playstation-5
+      - playstation-4
+      - playstation-3
+      - playstation-2
+      - playstation-1
+      - nintendo-switch
+      - nintendo-wii
+      - game-cube
+      - nintendo-64
+      - super-nintendo
+      - xbox-series-x
+      - xbox-one
+      - xbox-360
+      - pc
+    Game:
+      type: object
+      properties:
+        title: 
+          type: string
+          description: Game title
+        releaseYear:
+          type: integer
+          description: Game release year
+        platforms:
+          type: array
+          description: Platforms game was released to
+          items:
+            $ref: '#/components/schemas/Platform'
+      required:
+      - title
+      - releaseYear
+      - platforms
+    GamesList:
+        type: array
+        items:
+          $ref: '#/components/schemas/Game'
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: integer
+        success:
+          type: boolean
