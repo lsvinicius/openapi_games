@@ -13,7 +13,7 @@ all_games = [
     Game(title='final fantasy ix', release_year=2000, platforms=[Platform.PLAYSTATION_1]),
     Game(title='final fantasy viii', release_year=1999, platforms=[Platform.PLAYSTATION_1]),
     Game(title='final fantasy vii', release_year=1997, platforms=[Platform.PLAYSTATION_1]),
-    Game(title='zelda breath of the wild', release_year=2017, platforms=[Platform.NINTENDO_WII]),
+    Game(title='zelda breath of the wild', release_year=2017, platforms=[Platform.NINTENDO_SWITCH]),
     Game(title='cyberpunk 2077', release_year=2020,
          platforms=[Platform.PLAYSTATION_4, Platform.PC, Platform.XBOX_ONE])
 ]
